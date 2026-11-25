@@ -32,3 +32,22 @@ Contexto: faço deploy em dois tipos de ambiente:
 - Dependo da DSI para criar/ceder servidores → automatizar a configuração (Ansible) reduz o tempo de preparar cada servidor novo.
 
 **Ideia principal:** entregas pequenas e frequentes são *mais* seguras — menos risco por alteração e mais fácil de reverter.
+
+## Dia 2 — 24–25/11/2026 — Sistema de ficheiros, utilizadores e permissões
+**Teoria:** FHS, utilizadores/grupos, rwx e octal, setgid, sudo, umask.
+**Prática:** utilizador `deploy` + grupo `www-data`; estrutura `/var/www/app` (tipo Laravel) com permissões de produção; 6 testes com `sudo -u`.
+
+**O que aprendi:**
+- Separar quem faz deploy (`deploy`, dono) de quem corre a app (`www-data`, só lê o código).
+- Setgid (`2750`) faz os ficheiros novos herdarem o grupo da pasta.
+- `.env` nasceu `644` (visível a todos) — corrigido para `640`.
+- O erro do Laravel "storage/logs/laravel.log could not be opened" resolve-se com permissões certas, não com `777`.
+
+**Descoberta importante:**
+- Ficheiros criados pelo `deploy` nasceram `664` (umask `002` no Ubuntu) → o `www-data` conseguiu alterar código (`novo.php` passou de 0 para 12 bytes).
+- Solução: repor permissões no fim de cada deploy (`find -exec chmod`). Vai entrar no script de deploy.
+
+**Dúvidas / bloqueios:**
+- Ao abrir `wsl` no PowerShell entrei na distro `docker-desktop` → resolvido com `wsl --set-default Ubuntu-24.04`.
+
+**Próximo:** Dia 3 — processos, serviços (systemd) e pacotes.
